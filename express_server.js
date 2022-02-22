@@ -32,7 +32,7 @@ app.get("/urls/new", (req, res) => {
 });
 
 
-
+//Creating New URL
 app.post("/urls", (req, res) => {
   console.log(req.body);  // Log the POST request body to the console
   let longURL = req.body.longURL;
@@ -49,14 +49,22 @@ app.get("/urls", (req, res) => {
 });
 
 
-
+//Shortening URL
 app.get("/urls/:shortURL", (req, res) => {
   let shortURL = req.params.shortURL;
   let longURL = urlDatabase[shortURL];
   const templateVars = { shortURL, longURL };
-  res.redirect(longURL);
+  // res.redirect(longURL);
   res.render("urls_show", templateVars);
 });
+
+//Outputting Short URL With Long URL
+app.get("/u/:shortURL", (req, res) => {
+  let shortURL = req.params.shortURL;
+  let longURL = urlDatabase[shortURL];
+  res.redirect(longURL);
+});
+
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
