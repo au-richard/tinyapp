@@ -13,7 +13,14 @@
         </h5>
         <p class="card-text">Short URL: <a href="/u/<%= shortURL %>">
             <%= shortURL %>
-          </a></p>
+          </a>
+        <form method="POST" action="/urls/<%= shortURL %>/edit">
+          <label>New Link</label>
+          <input type="text" name="longURL">
+          <button type="submit" class="btn btn-success">Update</button>
+        </form>
+        </p>
+
       </div>
     </div>
     </div>
