@@ -88,6 +88,12 @@ app.get("/u/:shortURL", (req, res) => {
   res.redirect(longURL);
 });
 
+//Create New User
+app.get("/register", (req, res) => {
+  const templateVars = { username: null };
+  res.render("register", templateVars);
+});
+
 //Login Username
 app.post("/login", (req, res) => {
   console.log(req.body.username);
