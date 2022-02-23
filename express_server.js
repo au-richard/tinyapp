@@ -61,7 +61,6 @@ app.post("/urls/:shortURL/edit", (req, res) => {
   res.redirect("/urls");
 });
 
-
 app.get("/urls", (req, res) => {
   const templateVars = {
     urls: urlDatabase,
