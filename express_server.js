@@ -3,48 +3,16 @@ const app = express();
 const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
+const { users, emailCheck, passCheck } = require("./helpers/userHelper");
+const { urlDatabase } = require("./data/userData.js");
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.set("view engine", "ejs");
 
-const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com",
-  "a9ml61": "http://www.instagram.com"
-};
-
-const users = {
-  "userRandomID": {
-    id: "userRandomID",
-    email: "user@example.com",
-    password: "purple-monkey-dinosaur"
-  },
-  "user2RandomID": {
-    id: "user2RandomID",
-    email: "user2@example.com",
-    password: "dishwasher-funk"
-  }
-};
 
 const generateRandomString = () => {
   return Math.random().toString(36).substr(2, 6);
-};
-
-const emailCheck = (email) => {
-  for (userID in users) {
-    if (users[userID].email === email) {
-      console.log("User ID:", users[userID].id);
-      return users[userID].id;
-    }
-  }
-};
-
-const passCheck = (id, password) => {
-  if (id) {
-    console.log("Password Check", users[id].password === password);
-    return users[id].password === password;
-  }
 };
 
 app.get("/", (req, res) => {
@@ -60,7 +28,11 @@ app.get("/hello", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  const templateVars = {
+    user: users[req.cookies.user_id],
+    email: users[req.cookies.email]
+  };
+  res.render("urls_new", templateVars);
 });
 
 //Creating New URL
@@ -93,7 +65,7 @@ app.post("/urls/:shortURL/edit", (req, res) => {
 app.get("/urls", (req, res) => {
   const templateVars = {
     urls: urlDatabase,
-    user: users["userId"]
+    user: users[req.cookies.user_id]
   };
   res.render("urls_index", templateVars);
 });
@@ -105,7 +77,8 @@ app.get("/urls/:shortURL", (req, res) => {
   const templateVars = {
     shortURL,
     longURL,
-    user: users["userId"]
+    user: users[req.cookies.user_id],
+    email: users[req.cookies.email]
   };
   res.render("urls_show", templateVars);
 });
@@ -119,7 +92,11 @@ app.get("/u/:shortURL", (req, res) => {
 
 //Render New User Page
 app.get("/register", (req, res) => {
-  const templateVars = { user: users["userId"] };
+  const templateVars = {
+    user: users[req.cookies.user_id],
+    email: users[req.cookies.email],
+    password: users[req.cookies.password]
+  };
   res.render("register", templateVars);
 });
 
@@ -127,18 +104,20 @@ app.get("/register", (req, res) => {
 app.post("/register", (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
-    res.status(400).send('Bad Request');
+    res.status(404).send('Bad Request');
+  } else if (emailCheck(email)) {
+    res.status(404).send('User already exists');
+  } else {
+    const id = generateRandomString();
+    users[id] = { id, email, password };
+    res.cookie("user_id", id);
+    res.redirect("/urls");
   }
-  const newId = generateRandomString();
-  users[newId] = { email, password, newId };
-  res.cookie("userId", users[newId].newId);
-  res.redirect("/urls");
-
 });
 
 //render Login Page
 app.get("/login", (req, res) => {
-  const templateVars = { user: users["userId"] };
+  const templateVars = { user: users[req.cookies.email] };
   res.render("login", templateVars);
 });
 
@@ -146,22 +125,20 @@ app.get("/login", (req, res) => {
 app.post("/login", (req, res) => {
   const userId = emailCheck(req.body.email);
   const passMatch = passCheck(userId, req.body.password);
-  //If a user with that e-mail cannot be found, return a response with a 403 status code.
   if (!userId || !passMatch) {
     return res.status(403).send('Bad Request');
   }
-
-  //If both checks pass, set the user_id cookie with the matching user's random ID, then redirect to /urls.
   console.log(req.body);
-  res.cookie("userId", userId);
+  res.cookie("user_id", userId);
   console.log(users);
   res.redirect("/urls");
 });
 
 //Logout User
 app.post("/logout", (req, res) => {
-  console.log(req.body.username);
-  res.clearCookie("userId", req.body.username);
+  const userId = req.body.email;
+  console.log(req.body);
+  res.clearCookie("user_id");
   res.redirect("/urls");
 });
 

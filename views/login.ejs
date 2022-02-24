@@ -13,23 +13,19 @@
 
 <body>
   <%- include('partials/_header') %>
-    <div class="card text-center">
-      <div class="card-header"></div>
-      <div class="card-body">
-        <h3>Sign In To Your Account</h3>
-        <form method="POST" action="/login">
-          <label for="email">Email</label>
-          <input type="email" name="email" placeholder="Email">
-          <br>
-          <label for="password">Password</label>
-          <input type="password" name="password" placeholder="Password">
-          <br>
-          <button type="submit" class="btn btn-success">Log In</button>
-        </form>
-      </div>
-    </div>
-    </div>
-    <div class="card-footer text-muted"></div>
+    <div class="card-body">
+      <h3>Sign In To Your Account</h3>
+      <form method="POST" action="/login">
+        <label for="email">Email</label>
+        <br>
+        <input type="email" name="email" placeholder="Enter Email">
+        <br>
+        <label for="password">Password</label>
+        <br>
+        <input type="password" name="password" placeholder="Password">
+        <br>
+        <button type="submit" class="btn btn-success">Log In</button>
+      </form>
     </div>
 </body>
 

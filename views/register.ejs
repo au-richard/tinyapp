@@ -8,28 +8,25 @@
   <!-- Bootstrap CSS -->
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
     integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+
   <title>TinyApp</title>
 </head>
 
 <body>
   <%- include('partials/_header') %>
-    <div class="card text-center">
-      <div class="card-header"></div>
-      <div class="card-body">
-        <h3>Please fill in details below</h3>
-        <form method="POST" action="/register">
-          <label for="email">Email</label>
-          <input type="email" name="email" placeholder="Email">
-          <br>
-          <label for="password">Password</label>
-          <input type="password" name="password" placeholder="Password">
-          <br>
-          <button type="submit" class="btn btn-success">Sign Up</button>
-        </form>
-      </div>
-    </div>
-    </div>
-    <div class="card-footer text-muted"></div>
+    <div class="card-body">
+      <h1>Create Account</h1>
+      <form method="POST" action="/register">
+        <label for="email">Email Address</label>
+        <br>
+        <input type="email" name="email" placeholder="Enter Email">
+        <br>
+        <label for="password">Password</label>
+        <br>
+        <input type="password" name="password" placeholder="Password">
+        <br>
+        <button type="submit" class="btn btn-success">Register</button>
+      </form>
     </div>
 </body>
 
