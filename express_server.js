@@ -27,8 +27,24 @@ const users = {
   }
 };
 
-function generateRandomString() {
+const generateRandomString = () => {
   return Math.random().toString(36).substr(2, 6);
+};
+
+const emailCheck = (email) => {
+  for (userID in users) {
+    if (users[userID].email === email) {
+      console.log("User ID:", users[userID].id);
+      return users[userID].id;
+    }
+  }
+};
+
+const passCheck = (id, password) => {
+  if (id) {
+    console.log("Password Check", users[id].password === password);
+    return users[id].password === password;
+  }
 };
 
 app.get("/", (req, res) => {
@@ -128,8 +144,16 @@ app.get("/login", (req, res) => {
 
 //Login User
 app.post("/login", (req, res) => {
-  console.log(req.body.username);
-  res.cookie("userId", user[email]);
+  const userId = emailCheck(req.body.email);
+  const passMatch = passCheck(userId, req.body.password);
+  //If a user with that e-mail cannot be found, return a response with a 403 status code.
+  if (!userId || !passMatch) {
+    return res.status(403).send('Bad Request');
+  }
+
+  //If both checks pass, set the user_id cookie with the matching user's random ID, then redirect to /urls.
+  console.log(req.body);
+  res.cookie("userId", userId);
   console.log(users);
   res.redirect("/urls");
 });
