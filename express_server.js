@@ -14,6 +14,19 @@ const urlDatabase = {
   "a9ml61": "http://www.instagram.com"
 };
 
+const users = {
+  "userRandomID": {
+    id: "userRandomID",
+    email: "user@example.com",
+    password: "purple-monkey-dinosaur"
+  },
+  "user2RandomID": {
+    id: "user2RandomID",
+    email: "user2@example.com",
+    password: "dishwasher-funk"
+  }
+};
+
 function generateRandomString() {
   return Math.random().toString(36).substr(2, 6);
 };
@@ -64,7 +77,7 @@ app.post("/urls/:shortURL/edit", (req, res) => {
 app.get("/urls", (req, res) => {
   const templateVars = {
     urls: urlDatabase,
-    username: req.cookies["username"]
+    user: users["userId"]
   };
   res.render("urls_index", templateVars);
 });
@@ -76,7 +89,7 @@ app.get("/urls/:shortURL", (req, res) => {
   const templateVars = {
     shortURL,
     longURL,
-    username: req.cookies["username"]
+    user: users["userId"]
   };
   res.render("urls_show", templateVars);
 });
@@ -88,23 +101,43 @@ app.get("/u/:shortURL", (req, res) => {
   res.redirect(longURL);
 });
 
-//Create New User
+//Render New User Page
 app.get("/register", (req, res) => {
-  const templateVars = { username: null };
+  const templateVars = { user: users["userId"] };
   res.render("register", templateVars);
 });
 
-//Login Username
+//Create New User
+app.post("/register", (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    res.status(400).send('Bad Request');
+  }
+  const newId = generateRandomString();
+  users[newId] = { email, password, newId };
+  res.cookie("userId", users[newId].newId);
+  res.redirect("/urls");
+
+});
+
+//render Login Page
+app.get("/login", (req, res) => {
+  const templateVars = { user: users["userId"] };
+  res.render("login", templateVars);
+});
+
+//Login User
 app.post("/login", (req, res) => {
   console.log(req.body.username);
-  res.cookie("username", req.body.username);
+  res.cookie("userId", user[email]);
+  console.log(users);
   res.redirect("/urls");
 });
 
-//Logout Username
+//Logout User
 app.post("/logout", (req, res) => {
   console.log(req.body.username);
-  res.clearCookie("username", req.body.username);
+  res.clearCookie("userId", req.body.username);
   res.redirect("/urls");
 });
 
