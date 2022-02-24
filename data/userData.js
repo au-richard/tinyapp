@@ -4,4 +4,4 @@ const urlDatabase = {
   "a9ml61": "http://www.instagram.com"
 };
 
-module.exports = {urlDatabase};
+module.exports = { urlDatabase }; 

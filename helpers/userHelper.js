@@ -20,6 +20,7 @@ const emailCheck = (email) => {
   }
 };
 
+
 const passCheck = (id, password) => {
   if (id) {
     console.log("Password Check", users[id].password === password);
