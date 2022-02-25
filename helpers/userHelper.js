@@ -1,3 +1,5 @@
+const bcrypt = require('bcryptjs');
+
 const users = {
   "userRandomID": {
     id: "userRandomID",
@@ -23,7 +25,7 @@ const emailCheck = (email) => {
 const passCheck = (id, password) => {
   if (id) {
     console.log("Password Check", users[id].password === password);
-    return users[id].password === password;
+    return bcrypt.compareSync(password, users[id].password);
   }
 };
 

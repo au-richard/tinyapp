@@ -1,4 +1,5 @@
 const express = require("express");
+const bcrypt = require('bcryptjs');
 const app = express();
 const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
@@ -14,6 +15,9 @@ app.set("view engine", "ejs");
 const generateRandomString = () => {
   return Math.random().toString(36).substr(2, 6);
 };
+
+const password = "purple-monkey-dinosaur"; // found in the req.params object
+const hashedPassword = bcrypt.hashSync(password, 10);
 
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -130,7 +134,11 @@ app.post("/register", (req, res) => {
     res.status(404).send('User already exists');
   } else {
     const id = generateRandomString();
-    users[id] = { id, email, password };
+    users[id] = {
+      id,
+      email,
+      password: bcrypt.hashSync(password, 10)
+    };
     res.cookie("user_id", id);
     res.redirect("/urls");
   }
