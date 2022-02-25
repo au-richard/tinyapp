@@ -3,7 +3,7 @@ const app = express();
 const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
-const { users, emailCheck, passCheck } = require("./helpers/userHelper");
+const { users, emailCheck, passCheck, urlsForUser } = require("./helpers/userHelper");
 const { urlDatabase } = require("./data/userData.js");
 
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -28,11 +28,17 @@ app.get("/hello", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  const templateVars = {
-    user: users[req.cookies.user_id],
-    email: users[req.cookies.email]
-  };
-  res.render("urls_new", templateVars);
+  if (!req.cookies.user_id) {
+    res.redirect("/login");
+  } else {
+    const templateVars = {
+      user: users[req.cookies.user_id],
+      email: users[req.cookies.email]
+    };
+    res.render("urls_new", templateVars);
+  }
+
+
 });
 
 //Creating New URL
@@ -40,40 +46,55 @@ app.post("/urls", (req, res) => {
   console.log(req.body);  // Log the POST request body to the console
   const longURL = req.body.longURL;
   const shortURL = generateRandomString();
-  urlDatabase[shortURL] = longURL;
+  urlDatabase[shortURL] = {
+    longURL,
+    userID: req.cookies.user_id
+  };
   res.redirect(`/urls/${shortURL}`);
 });
 
 //Deleting URL
-app.post("/urls/:shortURL/delete", (req, res) => {
-  const shortURL = req.params.shortURL;
+app.post("/urls/:id/delete", (req, res) => {
+  const shortURL = req.params.id;
   console.log(shortURL);
   delete urlDatabase[shortURL];
   res.redirect("/urls");
 });
 
 //Editing Long URL
-app.post("/urls/:shortURL/edit", (req, res) => {
-  console.log(req);  // Log the POST request body to the console
-  const shortURL = req.params.shortURL;
+app.post("/urls/:id", (req, res) => {
+  console.log("Beginning of Edit Function", req.body);  // Log the POST request body to the console
+  const shortURL = req.params.id;
   const newURL = req.body.longURL;
-  urlDatabase[shortURL] = newURL;
-  console.log(shortURL);
+  urlDatabase[shortURL] = {
+    longURL: newURL,
+    userID: req.cookies.user_id
+  };
+  console.log("Short URL After Editing:", shortURL);
   res.redirect("/urls");
 });
 
+
+//Checking login
 app.get("/urls", (req, res) => {
-  const templateVars = {
-    urls: urlDatabase,
-    user: users[req.cookies.user_id]
-  };
-  res.render("urls_index", templateVars);
+  console.log("ID", req.cookies.user_id);
+  const urlsToDisplay = urlsForUser(req.cookies.user_id, urlDatabase);
+  if (users[req.cookies.user_id]) {
+    const templateVars = {
+      urls: urlsToDisplay,
+      user: users[req.cookies.user_id]
+    };
+    console.log(templateVars);
+    res.render("urls_index", templateVars);
+  } else {
+    res.redirect("/login");
+  }
 });
 
-//Shortening URL
-app.get("/urls/:shortURL", (req, res) => {
-  const shortURL = req.params.shortURL;
-  const longURL = urlDatabase[shortURL];
+//Shortening URL, URL ID Page
+app.get("/urls/:id", (req, res) => {
+  const shortURL = req.params.id;
+  const longURL = urlDatabase[shortURL].longURL;
   const templateVars = {
     shortURL,
     longURL,
@@ -84,9 +105,9 @@ app.get("/urls/:shortURL", (req, res) => {
 });
 
 //Outputting Short URL With Long URL
-app.get("/u/:shortURL", (req, res) => {
-  const shortURL = req.params.shortURL;
-  const longURL = urlDatabase[shortURL];
+app.get("/u/:id", (req, res) => {
+  const shortURL = req.params.id;
+  const longURL = urlDatabase[shortURL].longURL;
   res.redirect(longURL);
 });
 
@@ -144,4 +165,4 @@ app.post("/logout", (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
-}); 
+});

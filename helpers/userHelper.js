@@ -20,7 +20,6 @@ const emailCheck = (email) => {
   }
 };
 
-
 const passCheck = (id, password) => {
   if (id) {
     console.log("Password Check", users[id].password === password);
@@ -28,4 +27,24 @@ const passCheck = (id, password) => {
   }
 };
 
-module.exports = { users, emailCheck, passCheck };
+const urlsForUser = (id, urlDatabase) => {
+  console.log("This is id, database", id, urlDatabase);
+  let newProfile = {};
+  for (const shortURL in urlDatabase) {
+    console.log(shortURL);
+    if (urlDatabase[shortURL]["userID"] === id) {
+      newProfile[shortURL] = urlDatabase[shortURL];
+    }
+  }
+  return newProfile;
+};
+
+
+
+module.exports = { users, emailCheck, passCheck, urlsForUser };
+//
+//loop through short URLS
+//compare ID inside function to ID inside shortURL
+//return long URL and short URL from that id
+
+
