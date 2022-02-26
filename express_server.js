@@ -46,13 +46,11 @@ app.get("/login", (req, res) => {
 //Checking login
 app.get("/urls", (req, res) => {
   const userID = req.session["user_id"];
-  // const email = req.session["email"];
   const urlsToDisplay = urlsForUser(userID, urlDatabase);
   if (users[userID]) {
     const templateVars = {
       urls: urlsToDisplay,
       user: users[userID]
-      // email: user.email
     };
     res.render("urls_index", templateVars);
   } else {
@@ -119,7 +117,7 @@ app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
   urlDatabase[shortURL] = {
     longURL,
-    user: users[userID]
+    user: userID
   };
   res.redirect(`/urls/${shortURL}`);
 });
