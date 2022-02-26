@@ -1,5 +1,9 @@
 const bcrypt = require('bcryptjs');
 
+const generateRandomString = () => {
+  return Math.random().toString(36).substr(2, 6);
+};
+
 const users = {
   "userRandomID": {
     id: "userRandomID",
@@ -16,7 +20,6 @@ const users = {
 const emailCheck = (email) => {
   for (userID in users) {
     if (users[userID].email === email) {
-      console.log("User ID:", users[userID].id);
       return users[userID].id;
     }
   }
@@ -24,17 +27,13 @@ const emailCheck = (email) => {
 
 const passCheck = (id, password) => {
   if (id) {
-    console.log("Password Check", users[id].password === password);
-    console.log("Passwords Output", password, users[id].password);
     return bcrypt.compareSync(password, users[id].password);
   }
 };
 
 const urlsForUser = (id, urlDatabase) => {
-  console.log("This is id, database", id, urlDatabase);
   let newProfile = {};
   for (const shortURL in urlDatabase) {
-    console.log(shortURL);
     if (urlDatabase[shortURL]["userID"] === id) {
       newProfile[shortURL] = urlDatabase[shortURL];
     }
@@ -52,4 +51,4 @@ const getUserByEmail = function (email, database) {
 };
 
 
-module.exports = { users, emailCheck, passCheck, urlsForUser, getUserByEmail };
+module.exports = { users, emailCheck, passCheck, urlsForUser, getUserByEmail, generateRandomString };

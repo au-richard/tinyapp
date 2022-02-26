@@ -4,43 +4,41 @@ const app = express();
 const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
 const cookieSession = require('cookie-session');
-const { users, emailCheck, passCheck, urlsForUser } = require("./helpers/userHelper");
+const { users, emailCheck, passCheck, urlsForUser, generateRandomString } = require("./helpers/userHelper");
 const { urlDatabase } = require("./data/userData.js");
 
 app.set("view engine", "ejs");
+
+//Middleware
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieSession({
   name: 'session',
   keys: ["user_id", "email", "password"],
-
   // Cookie Options
   maxAge: 24 * 60 * 60 * 1000 // 24 hours
 }));
 
-
-
-const generateRandomString = () => {
-  return Math.random().toString(36).substr(2, 6);
-};
+app.listen(PORT, () => {
+  console.log(`Tiny App listening on port ${PORT}!`);
+});
 
 //App GET
+//Homepage
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  if (req.session.userID) {
+    res.redirect("/urls");
+  } else {
+    res.redirect("/login");
+  }
 });
 
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-});
-
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
-});
-
-//render Login Page
+//Render Login Page
 app.get("/login", (req, res) => {
-  const email = req.session["email"];
+  const userID = req.session["user_id"];
+  const email = req.session["email"];;
   const templateVars = {
-    user: email
+    user: users[userID],
+    email
   };
   res.render("login", templateVars);
 });
@@ -48,14 +46,14 @@ app.get("/login", (req, res) => {
 //Checking login
 app.get("/urls", (req, res) => {
   const userID = req.session["user_id"];
+  // const email = req.session["email"];
   const urlsToDisplay = urlsForUser(userID, urlDatabase);
   if (users[userID]) {
     const templateVars = {
       urls: urlsToDisplay,
-      user: userID
-
+      user: users[userID]
+      // email: user.email
     };
-    console.log(templateVars);
     res.render("urls_index", templateVars);
   } else {
     res.redirect("/login");
@@ -70,8 +68,7 @@ app.get("/urls/new", (req, res) => {
     res.redirect("/login");
   } else {
     const templateVars = {
-
-      user: userID,
+      user: users[userID],
       email
     };
     res.render("urls_new", templateVars);
@@ -87,7 +84,7 @@ app.get("/urls/:id", (req, res) => {
   const templateVars = {
     shortURL,
     longURL,
-    user: userID,
+    user: users[userID],
     email
   };
   res.render("urls_show", templateVars);
@@ -106,7 +103,7 @@ app.get("/register", (req, res) => {
   const email = req.session["email"];
   const password = req.session["password"];
   const templateVars = {
-    user: userID,
+    user: users[userID],
     email,
     password
   };
@@ -117,13 +114,12 @@ app.get("/register", (req, res) => {
 //App POSTS
 //Creating New URL
 app.post("/urls", (req, res) => {
-  console.log(req.body);  // Log the POST request body to the console
   const userID = req.session["user_id"];
   const longURL = req.body.longURL;
   const shortURL = generateRandomString();
   urlDatabase[shortURL] = {
     longURL,
-    userID
+    user: users[userID]
   };
   res.redirect(`/urls/${shortURL}`);
 });
@@ -131,22 +127,19 @@ app.post("/urls", (req, res) => {
 //Deleting URL
 app.post("/urls/:id/delete", (req, res) => {
   const shortURL = req.params.id;
-  console.log(shortURL);
   delete urlDatabase[shortURL];
   res.redirect("/urls");
 });
 
 //Editing Long URL
 app.post("/urls/:id", (req, res) => {
-  console.log("Beginning of Edit Function", req.body);  // Log the POST request body to the console
   const userID = req.session["user_id"];
   const shortURL = req.params.id;
   const newURL = req.body.longURL;
   urlDatabase[shortURL] = {
     longURL: newURL,
-    userID
+    user: userID
   };
-  console.log("Short URL After Editing:", shortURL);
   res.redirect("/urls");
 });
 
@@ -176,21 +169,13 @@ app.post("/login", (req, res) => {
   if (!userId || !passMatch) {
     return res.status(403).send('Bad Request');
   } else {
-    console.log(req.body);
     req.session["user_id"] = userId;
-    console.log(users);
     res.redirect("/urls");
   }
 });
 
 //Logout User
 app.post("/logout", (req, res) => {
-  const userId = req.body.email;
-  console.log(req.body);
   req.session = null;
   res.redirect("/urls");
-});
-
-app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
 });
