@@ -4,9 +4,9 @@ TinyApp is a full stack web application that allows users to shorten, edit and c
 
 ## Final Product
 
-!["This is the URL Index Page after logging in."](#)
+!["This is the URL Index Page after logging in."](https://github.com/au-richard/tinyapp/blob/master/docs/urls-page.png)
 
-!["This is the page for editing an existing URL."](#)
+!["This is the page for editing an existing URL."](https://github.com/au-richard/tinyapp/blob/master/docs/edit-urls-page.png)
 
 ## Dependencies
 
