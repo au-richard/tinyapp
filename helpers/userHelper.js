@@ -4,7 +4,7 @@ const users = {
   "userRandomID": {
     id: "userRandomID",
     email: "user@example.com",
-    password: "purple-monkey-dinosaur"
+    password: bcrypt.hashSync("purple-monkey-dinosaur", 10)
   },
   "user2RandomID": {
     id: "user2RandomID",
@@ -25,6 +25,7 @@ const emailCheck = (email) => {
 const passCheck = (id, password) => {
   if (id) {
     console.log("Password Check", users[id].password === password);
+    console.log("Passwords Output", password, users[id].password);
     return bcrypt.compareSync(password, users[id].password);
   }
 };
@@ -41,12 +42,14 @@ const urlsForUser = (id, urlDatabase) => {
   return newProfile;
 };
 
+const getUserByEmail = function (email, database) {
+  for (const user in database) {
+    if (database[user].email === email) {
+      return database[user].id;
+    }
+  }
+  return null;
+};
 
 
-module.exports = { users, emailCheck, passCheck, urlsForUser };
-//
-//loop through short URLS
-//compare ID inside function to ID inside shortURL
-//return long URL and short URL from that id
-
-
+module.exports = { users, emailCheck, passCheck, urlsForUser, getUserByEmail };
