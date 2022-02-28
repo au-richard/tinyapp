@@ -1,3 +1,4 @@
+//List of all URLs and which account they belong to
 const urlDatabase = {
   "b2xVn2": {
     longURL: "http://www.lighthouselabs.ca",

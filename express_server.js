@@ -1,10 +1,18 @@
 const express = require("express");
-const bcrypt = require('bcryptjs');
+const bcrypt = require("bcryptjs");
 const app = express();
 const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
-const cookieSession = require('cookie-session');
-const { users, emailCheck, passCheck, urlsForUser, generateRandomString } = require("./helpers/userHelper");
+const cookieSession = require("cookie-session");
+const {
+  users,
+  emailCheck,
+  passCheck,
+  urlsForUser,
+  generateRandomString,
+  checkUserPermission,
+  urlCheck
+} = require("./helpers/userHelper");
 const { urlDatabase } = require("./data/userData.js");
 
 app.set("view engine", "ejs");
@@ -12,15 +20,11 @@ app.set("view engine", "ejs");
 //Middleware
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieSession({
-  name: 'session',
+  name: "session",
   keys: ["user_id", "email", "password"],
   // Cookie Options
   maxAge: 24 * 60 * 60 * 1000 // 24 hours
 }));
-
-app.listen(PORT, () => {
-  console.log(`Tiny App listening on port ${PORT}!`);
-});
 
 //App GET
 //Homepage
@@ -36,6 +40,9 @@ app.get("/", (req, res) => {
 app.get("/login", (req, res) => {
   const userID = req.session["user_id"];
   const email = req.session["email"];;
+  if (userID) {
+    res.redirect("/urls");
+  }
   const templateVars = {
     user: users[userID],
     email
@@ -78,20 +85,31 @@ app.get("/urls/:id", (req, res) => {
   const userID = req.session["user_id"];
   const email = req.session["email"];
   const shortURL = req.params.id;
-  const longURL = urlDatabase[shortURL].longURL;
-  const templateVars = {
-    shortURL,
-    longURL,
-    user: users[userID],
-    email
-  };
-  res.render("urls_show", templateVars);
+  const longURL = urlDatabase[shortURL] && urlDatabase[shortURL].longURL;
+  console.log("App Get User ID", userID);
+  if (!shortURL || !longURL) {
+    res.status(403).send("");
+  }
+  if (!checkUserPermission(userID, shortURL)) {
+    res.status(403).send("You don't have access to this page.");
+  } else {
+    const templateVars = {
+      shortURL,
+      longURL,
+      user: users[userID],
+      email
+    };
+    res.render("urls_show", templateVars);
+  }
 });
 
 //Outputting Short URL With Long URL
 app.get("/u/:id", (req, res) => {
   const shortURL = req.params.id;
   const longURL = urlDatabase[shortURL].longURL;
+  if (!urlCheck(shortURL)) {
+    res.status(403).send("URL does not exist.");
+  }
   res.redirect(longURL);
 });
 
@@ -100,6 +118,9 @@ app.get("/register", (req, res) => {
   const userID = req.session["user_id"];
   const email = req.session["email"];
   const password = req.session["password"];
+  if (userID) {
+    res.redirect("/urls");
+  }
   const templateVars = {
     user: users[userID],
     email,
@@ -115,6 +136,9 @@ app.post("/urls", (req, res) => {
   const userID = req.session["user_id"];
   const longURL = req.body.longURL;
   const shortURL = generateRandomString();
+  if (!checkUserPermission(userID, shortURL)) {
+    res.status(403).send("You don't have access to this page.");
+  }
   urlDatabase[shortURL] = {
     longURL,
     user: userID
@@ -124,7 +148,13 @@ app.post("/urls", (req, res) => {
 
 //Deleting URL
 app.post("/urls/:id/delete", (req, res) => {
+  const userID = req.session["user_id"];
   const shortURL = req.params.id;
+  if (!checkUserPermission(userID, shortURL)) {
+    res.status(403).send("You don't have access to this page.");
+  } else if (!urlCheck(shortURL)) {
+    res.status(403).send("URL does not exist.");
+  }
   delete urlDatabase[shortURL];
   res.redirect("/urls");
 });
@@ -134,6 +164,9 @@ app.post("/urls/:id", (req, res) => {
   const userID = req.session["user_id"];
   const shortURL = req.params.id;
   const newURL = req.body.longURL;
+  if (!checkUserPermission(userID, shortURL)) {
+    res.status(403).send("You don't have access to this page.");
+  }
   urlDatabase[shortURL] = {
     longURL: newURL,
     user: userID
@@ -145,9 +178,9 @@ app.post("/urls/:id", (req, res) => {
 app.post("/register", (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
-    res.status(404).send('Bad Request');
+    res.status(404).send("This is not a valid input for email or password. Please enter a proper email or password.");
   } else if (emailCheck(email)) {
-    res.status(404).send('User already exists');
+    res.status(404).send("User already exists. Please use another email.");
   } else {
     const id = generateRandomString();
     users[id] = {
@@ -165,7 +198,7 @@ app.post("/login", (req, res) => {
   const userId = emailCheck(req.body.email);
   const passMatch = passCheck(userId, req.body.password);
   if (!userId || !passMatch) {
-    return res.status(403).send('Bad Request');
+    return res.status(403).send("Password is not correct, please try again.");
   } else {
     req.session["user_id"] = userId;
     res.redirect("/urls");
@@ -176,4 +209,8 @@ app.post("/login", (req, res) => {
 app.post("/logout", (req, res) => {
   req.session = null;
   res.redirect("/urls");
+});
+
+app.listen(PORT, () => {
+  console.log(`Tiny App listening on port ${PORT}!`);
 });
