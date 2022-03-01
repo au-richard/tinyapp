@@ -86,7 +86,6 @@ app.get("/urls/:id", (req, res) => {
   const email = req.session["email"];
   const shortURL = req.params.id;
   const longURL = urlDatabase[shortURL] && urlDatabase[shortURL].longURL;
-  console.log("App Get User ID", userID);
   if (!shortURL || !longURL) {
     res.status(403).send("");
   }
@@ -136,12 +135,12 @@ app.post("/urls", (req, res) => {
   const userID = req.session["user_id"];
   const longURL = req.body.longURL;
   const shortURL = generateRandomString();
-  if (!checkUserPermission(userID, shortURL)) {
+  if (!userID) {
     res.status(403).send("You don't have access to this page.");
   }
   urlDatabase[shortURL] = {
     longURL,
-    user: userID
+    userID
   };
   res.redirect(`/urls/${shortURL}`);
 });
@@ -169,7 +168,7 @@ app.post("/urls/:id", (req, res) => {
   }
   urlDatabase[shortURL] = {
     longURL: newURL,
-    user: userID
+    userID
   };
   res.redirect("/urls");
 });
